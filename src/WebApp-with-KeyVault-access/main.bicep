@@ -4,12 +4,6 @@ param env string
 
 param location string
 
-param sqlServerName string
-
-param sharedResourceGroupName string
-
-param keyVaultName string
-
 // Web App params
 @allowed([
   'F1'
@@ -44,11 +38,6 @@ module application 'application.bicep' = {
     location: location
     env: env
     tenantId: subscription().tenantId
-    sharedResourceGroupName: sharedResourceGroupName
-    sqlServerName: sqlServerName
-    databaseName: 'test-db'
-    //dbLogin: kv.getSecret('sgtestow-app-sqlLogin-${env}')
-    //dbPassword: kv.getSecret('sgtestow-app-sqlPassword-${env}')
     skuName: skuName
     skuCapacity: skuCapacity
   }

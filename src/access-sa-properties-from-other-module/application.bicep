@@ -2,12 +2,10 @@
 
 param env string
 
-param tenantId string
-
-var keyVaultName = 'kv-sgowtest-2'
-
 // Region for all resources
 param location string = resourceGroup().location
+
+param storageAccountName string
 
 // Web App params
 @allowed([
@@ -57,53 +55,17 @@ resource webSite 'Microsoft.Web/sites@2020-12-01' = {
   }
 }
 
-resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = {
-  name: keyVaultName
-  location: location
-  properties:{
-    sku:{
-      family: 'A'
-      name: 'standard'
-    }
-    tenantId: tenantId
-    enabledForTemplateDeployment: true
-    accessPolicies:[
-    ]
-  }
+resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' existing = {
+  name: storageAccountName
 }
 
-resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2021-06-01-preview' = {
-  name: '${kv.name}/add'
+resource webSiteConnectionConfig 'Microsoft.Web/sites/config@2021-02-01' = {
+  name: '${webSite.name}/web'
   properties: {
-      accessPolicies: [
-          {
-              tenantId: tenantId
-              objectId: webSite.identity.principalId
-              permissions: {
-                keys: [
-                  'get'
-                ]
-                secrets: [
-                  'list'
-                  'get'
-                ]
-              }
-          }
-      ]
+    storageAccountKey: storageAccount.listKeys().keys[0].value
   }
 }
 
-
-
-resource webSiteConnectionStrings 'Microsoft.Web/sites/config@2020-06-01' = {
-  name: '${webSite.name}/connectionstrings'
-  properties: {
-    DefaultConnection: {
-      value: '@Microsoft.KeyVault(SecretUri=${keyVaultName}.vault.azure.net/secrets/aiConnectionString)'
-      type: 'SQLAzure'
-    }
-  }
-}
 
 output webSiteName string = webSiteName
 output webSiteDefaultHostName string = webSite.properties.defaultHostName
